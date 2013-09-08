@@ -1,0 +1,11 @@
+name 'ctrlcroot-gitolite'
+version '0.1.0'
+source 'git://github.com/CtrlC-Root/puppet-gitolite.git'
+author 'Alexandru Barbur'
+license 'GPLv3'
+summary 'Gitolite Module'
+description 'Manage gitolite3 repositories and ssh keys.'
+project_page 'https://github.com/CtrlC-Root/puppet-gitolite'
+
+dependency 'puppetlabs/stdlib', '>= 4.1.0'
+dependency 'puppetlabs/concat', '>= 1.0.0'
