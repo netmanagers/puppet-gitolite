@@ -1,0 +1,14 @@
+
+repo <%= @title %>
+<%- if @full_access.length > 0 -%>
+  RW+ = <%= @full_access.join(" ") %>
+<%- end -%>
+<%- if @read_write.length > 0 -%>
+  RW = <%= @read_write.join(" ") %>
+<%- end -%>
+<%- if @read_only.length > 0 -%>
+  R = <%= @read_only.join(" ") %>
+<%- end -%>
+<%- if @deny_access.length > 0 -%>
+  - = <%= @deny_access.join(" ") %>
+<%- end -%>

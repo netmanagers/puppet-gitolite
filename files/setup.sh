@@ -12,7 +12,8 @@ export ADMIN_SSHKEY="${BASEDIR}/${ADMIN_USERNAME}.key"
 
 # setup gitolite
 cd /var/lib/gitolite3
-ssh-keygen -y -f ${ADMIN_SSHKEY} > ${ADMIN_USERNAME}.pub
+#ssh-keygen -y -f ${ADMIN_SSHKEY} > ${ADMIN_USERNAME}.pub
+cp ${BASEDIR}/${ADMIN_USERNAME}.pub ${ADMIN_USERNAME}.pub
 sudo -u gitolite3 gitolite setup -pk ${ADMIN_USERNAME}.pub
 rm ${ADMIN_USERNAME}.pub
 
