@@ -2,6 +2,15 @@
 #
 # This class installs and configures gitolite3.
 #
+# == Parameters
+#
+# TODO
+#
+#
+# == Examples
+#
+# TODO: managed, unmanaged
+#
 class gitolite
 (
 	$admin_username,
@@ -23,19 +32,19 @@ class gitolite
 	} ->
 
 	# setup the admin directory
-	file {'gitolite_vardir':
+	file {'gitolite-vardir':
 		ensure  => directory,
 		path    => $::gitolite_basedir
 	} ->
 
-	file {'gitolite_sshkey':
+	file {'gitolite-sshkey':
 		ensure => file,
 		path   => "${::gitolite_basedir}/${admin_username}.key",
 		mode   => '0600',
 		source => $admin_sshkey
 	} ->
 
-	exec {'gitolite_pubkey':
+	exec {'gitolite-sshkey-public':
 		refreshonly => true,
 		subscribe   => File['gitolite_sshkey'],
 		path        => '/usr/bin',
@@ -43,28 +52,28 @@ class gitolite
 		command     => "ssh-keygen -y -f ${admin_username}.key > ${admin_username}.pub"
 	} ->
 
-	file {'gitolite_gitssh':
+	file {'gitolite-gitssh.sh':
 		ensure => file,
 		path   => "${::gitolite_basedir}/gitssh.sh",
 		mode   => '0755',
 		source => 'puppet:///modules/gitolite/gitssh.sh'
 	} ->
 
-	file {'gitolite_setup':
+	file {'gitolite-setup.sh':
 		ensure => file,
 		path   => "${::gitolite_basedir}/setup.sh",
 		mode   => '0755',
 		source => 'puppet:///modules/gitolite/setup.sh'
 	} ->
 
-	file {'gitolite_pull':
+	file {'gitolite-pull.sh':
 		ensure => file,
 		path   => "${::gitolite_basedir}/pull.sh",
 		mode   => '0755',
 		source => 'puppet:///modules/gitolite/pull.sh'
 	} ->
 
-	file {'gitolite_push':
+	file {'gitolite-push.sh':
 		ensure => file,
 		path   => "${::gitolite_basedir}/push.sh",
 		mode   => '0755',
@@ -72,7 +81,7 @@ class gitolite
 	} ->
 
 	# setup gitolite for the first time
-	exec {'gitolite_firstrun':
+	exec {'gitolite-firstrun':
 		refreshonly => true,
 		subscribe   => Package['gitolite3'],
 		path        => [$::gitolite_basedir],
@@ -80,10 +89,10 @@ class gitolite
 	} ->
 
 	# configure gitolite repositories and keys
-	exec {'gitolite_pull':
+	exec {'gitolite-pull':
 		path    => [$::gitolite_basedir],
 		command => "pull.sh '${::gitolite_basedir}' ${admin_username}",
-		require => File['gitolite_pull']
+		require => File['gitolite-pull.sh']
 	} ->
 
 	concat {'gitolite.conf':
@@ -93,7 +102,7 @@ class gitolite
 		mode  => '0644'
 	} ->
 
-	file {'gitolite_sshkeys':
+	file {'gitolite-sshkeys':
 		ensure  => directory,
 		path    => "${::gitolite_basedir}/gitolite-admin/keydir",
 		mode    => '0755',
@@ -101,10 +110,10 @@ class gitolite
 		recurse => true
 	} ->
 
-	exec {'gitolite_push':
+	exec {'gitolite-push':
 		path    => [$::gitolite_basedir],
 		command => "push.sh '${::gitolite_basedir}' ${admin_username}",
-		require => File['gitolite_push']
+		require => File['gitolite-push.sh']
 	}
 
 	# default configuration

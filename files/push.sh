@@ -13,10 +13,11 @@ export ADMIN_SSHKEY="${BASEDIR}/${ADMIN_USERNAME}.key"
 # switch to the admin repository
 cd ${BASEDIR}/gitolite-admin
 
-# add untracked files to the stage
+# check if there are any untracked files
 UNSTAGED=`git ls-files --exclude-standard --others`
 for file in $UNSTAGED;
 do
+	# add the file
 	git add $file
 done
 
