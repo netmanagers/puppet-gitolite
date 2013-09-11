@@ -46,7 +46,7 @@ class gitolite
 
 	exec {'gitolite-sshkey-public':
 		refreshonly => true,
-		subscribe   => File['gitolite_sshkey'],
+		subscribe   => File['gitolite-sshkey'],
 		path        => '/usr/bin',
 		cwd         => $::gitolite_basedir,
 		command     => "ssh-keygen -y -f ${admin_username}.key > ${admin_username}.pub"
