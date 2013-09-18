@@ -15,6 +15,7 @@ class gitolite
 (
 	$admin_username,
 	$admin_sshkey,
+	$manage_repos = true,
 	$local_keys = false,
 	$package_version = 'installed'
 )
@@ -86,43 +87,45 @@ class gitolite
 		subscribe   => Package['gitolite3'],
 		path        => [$::gitolite_basedir],
 		command     => "setup.sh '${::gitolite_basedir}' ${admin_username}"
-	} ->
-
-	# configure gitolite repositories and keys
-	exec {'gitolite-pull':
-		path    => [$::gitolite_basedir],
-		command => "pull.sh '${::gitolite_basedir}' ${admin_username}",
-		require => File['gitolite-pull.sh']
-	} ->
-
-	concat {'gitolite.conf':
-		path  => "${::gitolite_basedir}/gitolite-admin/conf/gitolite.conf",
-		owner => 'root',
-		group => 'root',
-		mode  => '0644'
-	} ->
-
-	file {'gitolite-sshkeys':
-		ensure  => directory,
-		path    => "${::gitolite_basedir}/gitolite-admin/keydir",
-		mode    => '0755',
-		purge   => !$local_keys,
-		recurse => true
-	} ->
-
-	exec {'gitolite-push':
-		path    => [$::gitolite_basedir],
-		command => "push.sh '${::gitolite_basedir}' ${admin_username}",
-		require => File['gitolite-push.sh']
 	}
 
-	# default configuration
-	gitolite::repo {'gitolite-admin':
-		full_access => [$admin_username]
-	}
+	if $manage_repos {
+		# configure gitolite repositories and keys
+		exec {'gitolite-pull':
+			path    => [$::gitolite_basedir],
+			command => "pull.sh '${::gitolite_basedir}' ${admin_username}",
+			require => [Exec['gitolite-firstrun'], File['gitolite-pull.sh']]
+		} ->
 
-	gitolite::sshkey {$admin_username:
-		host   => $::hostname,
-		source => "${::gitolite_basedir}/${admin_username}.pub"
+		concat {'gitolite.conf':
+			path  => "${::gitolite_basedir}/gitolite-admin/conf/gitolite.conf",
+			owner => 'root',
+			group => 'root',
+			mode  => '0644'
+		} ->
+
+		file {'gitolite-sshkeys':
+			ensure  => directory,
+			path    => "${::gitolite_basedir}/gitolite-admin/keydir",
+			mode    => '0755',
+			purge   => !$local_keys,
+			recurse => true
+		} ->
+
+		exec {'gitolite-push':
+			path    => [$::gitolite_basedir],
+			command => "push.sh '${::gitolite_basedir}' ${admin_username}",
+			require => File['gitolite-push.sh']
+		}
+
+		# default repos and ssh
+		gitolite::repo {'gitolite-admin':
+			full_access => [$admin_username]
+		}
+
+		gitolite::sshkey {$admin_username:
+			host   => $::hostname,
+			source => "${::gitolite_basedir}/${admin_username}.pub"
+		}
 	}
 }

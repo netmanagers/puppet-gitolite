@@ -18,4 +18,5 @@ rm ${ADMIN_USERNAME}.pub
 
 # check out the admin repository
 cd ${BASEDIR}
+rm -rf gitolite-admin
 git clone gitolite3@localhost:gitolite-admin
