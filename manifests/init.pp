@@ -94,14 +94,24 @@ class gitolite
 		subscribe   => Package['gitolite3'],
 		path        => [$::gitolite_basedir],
 		command     => "setup.sh '${::gitolite_basedir}' ${admin_username}"
+	} ->
+
+	# this exec is here only for other resources to trigger it,
+	# it updates gitolite's configuration when a new hook is installed or
+	# a change is made to the .gitolite.rc file (XXX manage .gitolite.rc)
+	exec {'gitolite-update':
+		refreshonly => true,
+		path        => ['/usr/bin'],
+		command     => 'sudo -u gitolite3 gitolite setup'
 	}
 
+	# manage repositories
 	if $manage_repos {
 		# configure gitolite repositories and keys
 		exec {'gitolite-pull':
 			path    => [$::gitolite_basedir],
 			command => "pull.sh '${::gitolite_basedir}' ${admin_username}",
-			require => [Exec['gitolite-firstrun'], File['gitolite-pull.sh']]
+			require => [Exec['gitolite-update'], File['gitolite-pull.sh']]
 		} ->
 
 		concat {'gitolite.conf':
