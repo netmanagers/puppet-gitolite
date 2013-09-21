@@ -81,6 +81,13 @@ class gitolite
 		source => 'puppet:///modules/gitolite/push.sh'
 	} ->
 
+	# configure sudo
+	file {'gitolite-sudo.conf':
+		ensure => file,
+		path   => '/etc/sudoers.d/gitolite.conf',
+		source => 'puppet:///modules/gitolite/sudoers'
+	} ->
+
 	# setup gitolite for the first time
 	exec {'gitolite-firstrun':
 		refreshonly => true,

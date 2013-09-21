@@ -1,0 +1,2 @@
+# allow sudo to run commands for root without a terminal
+Defaults:root !requiretty
