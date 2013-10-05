@@ -1,2 +1,5 @@
-# allow sudo to run commands for root without a terminal
+# Gitolite Sudo Configuration
+# This file is managed by puppet. Do not modify locally.
+
+# allow root to use sudo without a terminal
 Defaults:root !requiretty

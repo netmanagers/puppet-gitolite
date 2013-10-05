@@ -84,7 +84,8 @@ class gitolite
 	# configure sudo
 	file {'gitolite-sudo.conf':
 		ensure => file,
-		path   => '/etc/sudoers.d/gitolite.conf',
+		path   => '/etc/sudoers.d/gitolite',
+		mode   => '0640',
 		source => 'puppet:///modules/gitolite/sudoers'
 	} ->
 
