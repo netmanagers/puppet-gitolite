@@ -4,18 +4,38 @@
 #
 # == Parameters
 #
-# TODO
-#
+# admin_username::  The posix username of the administrator account.
+# admin_sshkey::    Absolute path to administrator's private ssh key.
+# manage_repos::    Manage repositories through this module only.
+#                   Defaults to true.
+# manage_keys::     Manage ssh keys through this module only. Defaults to true.
+# local_keys::      Don't purge unmanaged ssh keys. Defaults to false.
+# package_version:: Manage gitolite3 package version. Defaults to 'installed'.
 #
 # == Examples
 #
-# TODO: managed, unmanaged
+# This is how to set up gitolite3 and manage it from puppet.
+#
+#  class {'gitolite':
+#    admin_username => 'root',
+#    admin_sshkey   => '/root/.ssh/id_rsa'
+#  }
+#
+# This is how to set up gitolite3 without managing repositories or keys.
+#
+#  class {'gitolite':
+#    admin_username => 'redmine',
+#    admin_sshkey   => '/usr/share/redmine/.ssh/id_rsa',
+#    manage_repos   => false,
+#    manage_keys    => false
+#  }
 #
 class gitolite
 (
 	$admin_username,
 	$admin_sshkey,
 	$manage_repos = true,
+	$manage_keys = true,
 	$local_keys = false,
 	$package_version = 'installed'
 )
@@ -26,6 +46,14 @@ class gitolite
 		group => 'root',
 		mode  => '0644'
 	}
+
+	# validate parameters
+	validate_string($admin_username)
+	validate_absolute_path($admin_sshkey)
+	validate_bool($manage_repos)
+	validate_bool($manage_keys)
+	validate_bool($local_keys)
+	validate_string($package_version)
 
 	# install the package
 	package {'gitolite3':
@@ -106,44 +134,55 @@ class gitolite
 		command     => 'sudo -u gitolite3 gitolite setup'
 	}
 
-	# manage repositories
-	if $manage_repos {
-		# configure gitolite repositories and keys
+	# pull the most recent gitolite-admin repository
+	if $manage_repos or $manage_keys {
 		exec {'gitolite-pull':
 			path    => [$::gitolite_basedir],
 			command => "pull.sh '${::gitolite_basedir}' ${admin_username}",
-			require => [Exec['gitolite-update'], File['gitolite-pull.sh']]
-		} ->
+			require => [File['gitolite-pull.sh'], Exec['gitolite-update']]
+		}
+	}
 
+	# configure gitolite repositories
+	if $manage_repos {
 		concat {'gitolite.conf':
-			path  => "${::gitolite_basedir}/gitolite-admin/conf/gitolite.conf",
-			owner => 'root',
-			group => 'root',
-			mode  => '0644'
-		} ->
+			path    => "${::gitolite_basedir}/gitolite-admin/conf/gitolite.conf",
+			owner   => 'root',
+			group   => 'root',
+			mode    => '0644',
+			require => Exec['gitolite-pull'],
+			before  => Exec['gitolite-push']
+		}
 
+		gitolite::repo {'gitolite-admin':
+			full_access => [$admin_username]
+		}
+	}
+
+	# configure gitolite ssh keys
+	if $manage_keys {
 		file {'gitolite-sshkeys':
 			ensure  => directory,
 			path    => "${::gitolite_basedir}/gitolite-admin/keydir",
 			mode    => '0755',
 			purge   => !$local_keys,
-			recurse => true
-		} ->
-
-		exec {'gitolite-push':
-			path    => [$::gitolite_basedir],
-			command => "push.sh '${::gitolite_basedir}' ${admin_username}",
-			require => File['gitolite-push.sh']
-		}
-
-		# default repos and ssh
-		gitolite::repo {'gitolite-admin':
-			full_access => [$admin_username]
+			recurse => true,
+			require => Exec['gitolite-pull'],
+			before  => Exec['gitolite-push']
 		}
 
 		gitolite::sshkey {$admin_username:
 			host   => $::hostname,
 			source => "${::gitolite_basedir}/${admin_username}.pub"
+		}
+	}
+
+	# push any changes to the gitolite-admin repository
+	if $manage_repos or $manage_keys {
+		exec {'gitolite-push':
+			path    => [$::gitolite_basedir],
+			command => "push.sh '${::gitolite_basedir}' ${admin_username}",
+			require => [File['gitolite-push.sh'], Exec['gitolite-pull']]
 		}
 	}
 }
