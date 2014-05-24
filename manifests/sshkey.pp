@@ -30,6 +30,9 @@ define gitolite::sshkey
 		group   => 'root',
 		mode    => '0644',
 		source  => $source,
-		content => $content
+		content => $content,
+                require => Exec['gitolite-pull'],
+                before  => Exec['gitolite-push'],
+                notify  => Exec['gitolite-push'],
 	}
 }

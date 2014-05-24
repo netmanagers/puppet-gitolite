@@ -22,6 +22,9 @@ define gitolite::repo
 	concat::fragment {"gitolite-repo-${title}":
 		target  => 'gitolite.conf',
 		order   => '20',
-		content => template('gitolite/repo.conf.erb')
+		content => template('gitolite/repo.conf.erb'),
+                require => Exec['gitolite-pull'],
+                before  => Exec['gitolite-push'],
+                notify  => Exec['gitolite-push'],
 	}
 }
