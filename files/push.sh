@@ -17,16 +17,16 @@ cd ${BASEDIR}/gitolite-admin
 UNSTAGED=`git ls-files --exclude-standard --others`
 for file in $UNSTAGED;
 do
-	# add the file
-	git add $file
+  # add the file
+  git add $file
 done
 
 # check if the repository is dirty
 git diff-index --quiet HEAD
 if [ $? -ne 0 ]; then
-	# commit all changes
-	git commit -a -m "Puppet gitolite module."
+  # commit all changes
+  git commit -a -m "Puppet gitolite module."
 
-	# push the branch
-	git push origin master
+  # push the branch
+  git push origin master
 fi
